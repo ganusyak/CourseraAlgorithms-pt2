@@ -135,7 +135,7 @@ public class Percolation {
         if (!isInBounds(row, column)) {
             throw new IndexOutOfBoundsException();
         }
-        return connectedToTop[quickUnion.find(elementIndex(row, column))];
+        return connectedToTop[quickUnion.find(elementIndex(row, column))]; // whether elements root connected to the top
     }
         
     public boolean percolates() {
