@@ -1,22 +1,23 @@
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
-    private boolean[][] grid;                 // stores a state of element : open / closed
+
+    private boolean[] status;
     private boolean[] connectedToTop;         // connected to the top (or not)
     private boolean[] connectedToBottom;      // connected to the bottom (or not)
-    private WeightedQuickUnionUF qu;          
+    private WeightedQuickUnionUF quickUnion;          
     private boolean percolates;               // status of the system
     private int sizeOfArray;                  // size of grid
 
     public Percolation(int size) {
         if (size > 0) {
             // Initialize working array
-            grid = new boolean[size][size];
+            status = new boolean[size*size];
             connectedToTop = new boolean[size*size];
             connectedToBottom = new boolean[size*size];
             percolates = false;
             sizeOfArray = size;
-            qu = new WeightedQuickUnionUF(size * size);
+            quickUnion = new WeightedQuickUnionUF(size * size);
         } else {
             // throw exception if sizeOfArray < 1
             throw new IllegalArgumentException();
@@ -24,13 +25,12 @@ public class Percolation {
     }
 
     public void open(int row, int column) {
-        int i = column - 1;
-        int j = row - 1;
+
         if (!isOpen(row, column)) {
             boolean connectedToTheTop = false;
             boolean connectedToTheBottom = false;
-            grid[i][j] = true;
-            int actualElementIndex = i + j * sizeOfArray;
+            int actualElementIndex = elementIndex(row, column);
+            status[actualElementIndex] = true;
 
             if (row == 1) {
                 connectedToTheTop = true;  // definitely connected to the top              
@@ -45,11 +45,11 @@ public class Percolation {
                 // and already open
                 if (isOpen(row - 1, column)) {
                     int topNeighbourIndex = actualElementIndex - sizeOfArray;
-                    int topNeighbourRoot = qu.find(topNeighbourIndex);
+                    int topNeighbourRoot = quickUnion.find(topNeighbourIndex);
                     connectedToTheTop = connectedToTheTop || connectedToTop[topNeighbourRoot];
                     connectedToTheBottom = connectedToTheBottom || connectedToBottom[topNeighbourRoot];
                     // union with upper element if possible
-                    qu.union(actualElementIndex, topNeighbourIndex);
+                    quickUnion.union(actualElementIndex, topNeighbourIndex);
 
                 }
             }
@@ -59,11 +59,11 @@ public class Percolation {
                 // and already open
                 if (isOpen(row + 1, column)) {
                     int bottomNeighbourIndex = actualElementIndex + sizeOfArray;
-                    int bottomNeighbourRoot = qu.find(bottomNeighbourIndex);
+                    int bottomNeighbourRoot = quickUnion.find(bottomNeighbourIndex);
                     connectedToTheTop = connectedToTheTop || connectedToTop[bottomNeighbourRoot];
                     connectedToTheBottom = connectedToTheBottom || connectedToBottom[bottomNeighbourRoot];
                     // union with upper element if possible
-                    qu.union(actualElementIndex, bottomNeighbourIndex);
+                    quickUnion.union(actualElementIndex, bottomNeighbourIndex);
 
                 }
             }
@@ -71,10 +71,10 @@ public class Percolation {
             if (isInBounds(row, column - 1)) {
                 if (isOpen(row, column - 1)) {
                     int leftNeighbourIndex = actualElementIndex - 1;
-                    int leftNeighbourRoot = qu.find(leftNeighbourIndex);
+                    int leftNeighbourRoot = quickUnion.find(leftNeighbourIndex);
                     connectedToTheTop = connectedToTheTop || connectedToTop[leftNeighbourRoot];
                     connectedToTheBottom = connectedToTheBottom || connectedToBottom[leftNeighbourRoot];
-                    qu.union(actualElementIndex, leftNeighbourIndex);
+                    quickUnion.union(actualElementIndex, leftNeighbourIndex);
 
                 }
             }
@@ -82,13 +82,13 @@ public class Percolation {
             if (isInBounds(row, column + 1)) {
                 if (isOpen(row, column + 1)) {
                     int rightNeighbourIndex = actualElementIndex + 1;
-                    int rightNeighbourRoot = qu.find(rightNeighbourIndex);
+                    int rightNeighbourRoot = quickUnion.find(rightNeighbourIndex);
                     connectedToTheTop = connectedToTheTop || connectedToTop[rightNeighbourRoot];
                     connectedToTheBottom = connectedToTheBottom || connectedToBottom[rightNeighbourRoot];
-                    qu.union(actualElementIndex, rightNeighbourIndex);
+                    quickUnion.union(actualElementIndex, rightNeighbourIndex);
                 }
             } 
-            int newRoot = qu.find(actualElementIndex);
+            int newRoot = quickUnion.find(actualElementIndex);
             connectedToTop[newRoot] = connectedToTheTop;
             connectedToBottom[newRoot] = connectedToTheBottom;
             if (connectedToTheTop && connectedToTheBottom) {
@@ -109,23 +109,13 @@ public class Percolation {
         } 
         return result;
     }    
-    
-    private boolean isInBoundsOfGrid(int i, int j) {
-        boolean result = true;
-        int maxIndex = sizeOfArray() - 1;
-        if ((i < 0) || (i > maxIndex) || (j < 0) || (j > maxIndex)) {
-            result = false;        
-        } 
-        return result;
-    }
- 
+
     public boolean isOpen(int row, int column) {
-        int i = column - 1;
-        int j = row - 1;
+
         boolean result;
         
-        if (isInBoundsOfGrid(i, j)) {
-            if (grid[i][j]) {
+        if (isInBounds(row, column)) {
+            if (status[elementIndex(row, column)]) {
                 result = true;
             } else {
                 result = false;
@@ -137,13 +127,15 @@ public class Percolation {
         return result;
     }
     
+    private int elementIndex(int row, int column) {
+        return (row - 1) * sizeOfArray + column - 1;
+    }
+    
     public boolean isFull(int row, int column) {
-        int columnIndex = column - 1;
-        int rowIndex = row - 1;
-        if (!isInBoundsOfGrid(columnIndex, rowIndex)) {
+        if (!isInBounds(row, column)) {
             throw new IndexOutOfBoundsException();
         }
-        return connectedToTop[qu.find(rowIndex * sizeOfArray + columnIndex)];
+        return connectedToTop[quickUnion.find(elementIndex(row, column))];
     }
         
     public boolean percolates() {
