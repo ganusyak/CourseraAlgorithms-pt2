@@ -27,75 +27,68 @@ public class Percolation {
         int i = column - 1;
         int j = row - 1;
         if (!isOpen(row, column)) {
-            int actualIndex = 0, leftR, rightR,  bottomR;
             boolean connectedToTheTop = false;
             boolean connectedToTheBottom = false;
-            boolean leftConnectedT = false, rightConnectedT = false, bottomConnectedT = false, topConnectedT = false;
-            boolean leftConnectedB = false, rightConnectedB = false, bottomConnectedB = false, topConnectedB = false;
-
             grid[i][j] = true;
-            int numberInQU = i + j * sizeOfArray;
+            int actualElementIndex = i + j * sizeOfArray;
 
-            if (j == 0) {
+            if (row == 1) {
                 connectedToTheTop = true;  // definitely connected to the top              
             } 
 
-            if (j == sizeOfArray - 1) {
+            if (row == sizeOfArray) {
                 connectedToTheBottom = true; // // definitely connected to the bottom
             }
             
             // check if upper element exists
-            if (isInBoundsOfGrid(i, j - 1)) {
+            if (isInBounds(row - 1, column)) {
                 // and already open
                 if (isOpen(row - 1, column)) {
-                    int topNeighbourIndex = numberInQU - sizeOfArray;
+                    int topNeighbourIndex = actualElementIndex - sizeOfArray;
                     int topNeighbourRoot = qu.find(topNeighbourIndex);
-                    topConnectedT = topConnectedT || connectedToTop[topNeighbourRoot];
-                    topConnectedB = topConnectedB || connectedToBottom[topNeighbourRoot];
+                    connectedToTheTop = connectedToTheTop || connectedToTop[topNeighbourRoot];
+                    connectedToTheBottom = connectedToTheBottom || connectedToBottom[topNeighbourRoot];
                     // union with upper element if possible
-                    qu.union(numberInQU, topNeighbourIndex);
+                    qu.union(actualElementIndex, topNeighbourIndex);
 
                 }
             }
                   
             // check if lower element exists
-            if (isInBoundsOfGrid(i, j + 1)) {
+            if (isInBounds(row + 1, column)) {
                 // and already open
                 if (isOpen(row + 1, column)) {
-                    int index2 = numberInQU + sizeOfArray;
-                    bottomR = qu.find(index2);
-                    bottomConnectedT = bottomConnectedT || connectedToTop[bottomR];
-                    bottomConnectedB = bottomConnectedB || connectedToBottom[bottomR];
+                    int bottomNeighbourIndex = actualElementIndex + sizeOfArray;
+                    int bottomNeighbourRoot = qu.find(bottomNeighbourIndex);
+                    connectedToTheTop = connectedToTheTop || connectedToTop[bottomNeighbourRoot];
+                    connectedToTheBottom = connectedToTheBottom || connectedToBottom[bottomNeighbourRoot];
                     // union with upper element if possible
-                    qu.union(numberInQU, index2);
+                    qu.union(actualElementIndex, bottomNeighbourIndex);
 
                 }
             }
             // left (exactly like upper and lower)
-            if (isInBoundsOfGrid(i - 1, j)) {
+            if (isInBounds(row, column - 1)) {
                 if (isOpen(row, column - 1)) {
-                    int index2 = numberInQU - 1;
-                    leftR = qu.find(index2);
-                    leftConnectedT = leftConnectedT || connectedToTop[leftR];
-                    leftConnectedB = leftConnectedB || connectedToBottom[leftR];
-                    qu.union(numberInQU, index2);
+                    int leftNeighbourIndex = actualElementIndex - 1;
+                    int leftNeighbourRoot = qu.find(leftNeighbourIndex);
+                    connectedToTheTop = connectedToTheTop || connectedToTop[leftNeighbourRoot];
+                    connectedToTheBottom = connectedToTheBottom || connectedToBottom[leftNeighbourRoot];
+                    qu.union(actualElementIndex, leftNeighbourIndex);
 
                 }
             }
             // right (exactly like upper and lower)
-            if (isInBoundsOfGrid(i + 1, j)) {
+            if (isInBounds(row, column + 1)) {
                 if (isOpen(row, column + 1)) {
-                    int index2 = numberInQU + 1;
-                    rightR = qu.find(index2);
-                    rightConnectedT = rightConnectedT || connectedToTop[rightR];
-                    rightConnectedB = rightConnectedB || connectedToBottom[rightR];
-                    qu.union(numberInQU, index2);
+                    int rightNeighbourIndex = actualElementIndex + 1;
+                    int rightNeighbourRoot = qu.find(rightNeighbourIndex);
+                    connectedToTheTop = connectedToTheTop || connectedToTop[rightNeighbourRoot];
+                    connectedToTheBottom = connectedToTheBottom || connectedToBottom[rightNeighbourRoot];
+                    qu.union(actualElementIndex, rightNeighbourIndex);
                 }
             } 
-            connectedToTheTop = connectedToTheTop || topConnectedT || bottomConnectedT || rightConnectedT || leftConnectedT;
-            connectedToTheBottom = connectedToTheBottom || topConnectedB || bottomConnectedB || rightConnectedB || leftConnectedB;
-            int newRoot = qu.find(numberInQU);
-
+            int newRoot = qu.find(actualElementIndex);
             connectedToTop[newRoot] = connectedToTheTop;
             connectedToBottom[newRoot] = connectedToTheBottom;
             if (connectedToTheTop && connectedToTheBottom) {
@@ -106,6 +99,15 @@ public class Percolation {
     
     private int sizeOfArray() {
         return sizeOfArray;
+    }    
+    
+    private boolean isInBounds(int row, int column) {
+        boolean result = true;
+
+        if ((row < 1) || (row > sizeOfArray()) || (column < 1) || (column > sizeOfArray())) {
+            result = false;        
+        } 
+        return result;
     }    
     
     private boolean isInBoundsOfGrid(int i, int j) {
